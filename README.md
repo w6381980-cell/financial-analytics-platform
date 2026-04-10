@@ -54,7 +54,7 @@ Power BI Desktop
 ODBC Driver 17 for SQL Server
 
 1. Clone the repository
-bashgit clone https://github.com/your-username/financial-analytics-platform.git
+bashgit clone https://github.com/w6381980-cell/financial-analytics-platform
 cd financial-analytics-platform
 2. Install Python dependencies
 bashpip install faker pandas numpy pyodbc sqlalchemy statsmodels scikit-learn matplotlib seaborn reportlab openpyxl
