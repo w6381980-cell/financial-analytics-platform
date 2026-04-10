@@ -1,0 +1,87 @@
+-- -- ── DATABASE BANANA ────────────────────────────────────────────────
+-- CREATE DATABASE FinanceDB;
+-- GO
+-- USE FinanceDB;
+-- GO
+
+-- -- ── TABLE 1: STOCK PRICES ──────────────────────────────────────────
+-- CREATE TABLE stocks (
+--     stock_id    INT IDENTITY(1,1) PRIMARY KEY,
+--     trade_date  DATE          NOT NULL,
+--     ticker      VARCHAR(20)   NOT NULL,
+--     sector      VARCHAR(50),
+--     open_price  DECIMAL(10,2),
+--     high_price  DECIMAL(10,2),
+--     low_price   DECIMAL(10,2),
+--     close_price DECIMAL(10,2),
+--     volume      BIGINT
+-- );
+
+-- -- ── TABLE 2: QUARTERLY P&L ─────────────────────────────────────────
+-- CREATE TABLE financials (
+--     fin_id              INT IDENTITY(1,1) PRIMARY KEY,
+--     quarter             VARCHAR(10)    NOT NULL,   -- e.g. 2023-Q1
+--     ticker              VARCHAR(20)    NOT NULL,
+--     revenue             DECIMAL(18,2),
+--     cogs                DECIMAL(18,2),
+--     gross_profit        DECIMAL(18,2),
+--     operating_expenses  DECIMAL(18,2),
+--     ebit                DECIMAL(18,2),
+--     net_profit          DECIMAL(18,2),
+--     gross_margin_pct    DECIMAL(5,2),
+--     net_margin_pct      DECIMAL(5,2)
+-- );
+
+-- -- ── TABLE 3: PROJECTIONS (Python se fill hoga) ─────────────────────
+-- CREATE TABLE projections (
+--     proj_id         INT IDENTITY(1,1) PRIMARY KEY,
+--     ticker          VARCHAR(20),
+--     quarter         VARCHAR(10),
+--     projected_rev   DECIMAL(18,2),
+--     lower_bound     DECIMAL(18,2),
+--     upper_bound     DECIMAL(18,2),
+--     model_used      VARCHAR(50),
+--     created_at      DATETIME DEFAULT GETDATE()
+-- );
+
+-- -- ── VIEW: P&L SUMMARY (Power BI ke liye) ──────────────────────────
+-- -- Ye view Power BI mein directly import karenge
+-- CREATE VIEW vw_pl_summary AS
+-- SELECT
+--     f.quarter,
+--     f.ticker,
+--     f.revenue,
+--     f.gross_profit,
+--     f.net_profit,
+--     f.gross_margin_pct,
+--     f.net_margin_pct,
+--     f.ebit,
+--     -- YoY comparison ke liye LAG function
+--     LAG(f.revenue, 4) OVER (PARTITION BY f.ticker ORDER BY f.quarter) AS prev_year_revenue,
+--     ROUND(
+--         (f.revenue - LAG(f.revenue,4) OVER (PARTITION BY f.ticker ORDER BY f.quarter))
+--         / NULLIF(LAG(f.revenue,4) OVER (PARTITION BY f.ticker ORDER BY f.quarter), 0) * 100
+--     , 2) AS yoy_growth_pct
+-- FROM financials f;
+-- GO
+
+-- -- ── STORED PROCEDURE: CSV se bulk load ────────────────────────────
+-- CREATE PROCEDURE sp_load_stocks
+--     @file_path NVARCHAR(500)
+-- AS
+-- BEGIN
+--     BULK INSERT stocks
+--     FROM @file_path                  -- 'C:\finance_project\stocks.csv'
+--     WITH (
+--         FIRSTROW = 2,                -- Header skip karo
+--         FIELDTERMINATOR = ',',
+--         ROWTERMINATOR = '\n',
+--         TABLOCK
+--     );
+--     PRINT 'Stocks loaded successfully';
+-- END;
+-- GO
+
+-- -- Chalao:
+-- -- EXEC sp_load_stocks 'C:\finance_project\stocks.csv'
+-- -- EXEC sp_load_stocks 'C:\finance_project\financials.csv'
